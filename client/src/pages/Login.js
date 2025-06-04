@@ -9,16 +9,23 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    console.log('Login button clicked with email:', email);
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
+      const res = await axios.post('https://df3d-102-89-33-228.ngrok-free.app/api/auth/login', { email, password });
       localStorage.setItem('token', res.data.token);
-      if (res.data.role === 'Admin') {
+      const role = res.data.role;
+      console.log('Login successful, role:', role);
+      if (role === 'Admin') {
         navigate('/admin');
-      } else if (res.data.role === 'FrontDesk') {
+      } else if (role === 'FrontDesk') {
         navigate('/frontdesk');
+      } else {
+        console.error('Unknown role received:', role);
+        navigate('/login');
       }
     } catch (err) {
-      alert('Login failed. Check your email and password.');
+      console.log('Login error:', err.response?.data);
+      alert(err.response?.data?.msg || 'Login failed. Check your email and password.');
     }
   };
 

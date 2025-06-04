@@ -12,17 +12,23 @@ const ProtectedRoute = ({ role, children }) => {
   const token = localStorage.getItem('token');
 
   useEffect(() => {
+    console.log('ProtectedRoute checking token:', token);
     if (!token) {
+      console.log('No token, redirecting to /login');
       navigate('/login');
       return;
     }
 
     try {
       const decoded = jwtDecode(token);
-      if (decoded.role !== role) {
+      const userRole = decoded.user?.role; // Access the nested role
+      console.log('Decoded role:', userRole, 'Expected role:', role);
+      if (userRole !== role) {
+        console.log('Role mismatch, redirecting to /login');
         navigate('/login');
       }
     } catch (err) {
+      console.log('Token decode error:', err);
       navigate('/login');
     }
   }, [token, role, navigate]);

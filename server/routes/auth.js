@@ -2,54 +2,39 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { initDB, createTablesOrCollections } = require('../models/user');
-
-let db;
-
-router.use(async (req, res, next) => {
-  if (!db) {
-    db = await initDB();
-    await createTablesOrCollections();
-  }
-  next();
-});
+require('dotenv').config();
+const User = require('../models/User');
 
 router.post('/register', async (req, res) => {
   const { email, password, role } = req.body;
 
+  if (!['Admin', 'FrontDesk', 'Doctor'].includes(role)) {
+    return res.status(400).json({ msg: 'Invalid role' });
+  }
+
   try {
-    const dbType = process.env.DB_TYPE;
-    let user;
-
-    if (dbType === 'postgres') {
-      const checkUser = await db.query('SELECT * FROM users WHERE email = $1', [email]);
-      if (checkUser.rows.length > 0) {
-        return res.status(400).json({ msg: 'User already exists' });
-      }
-
-      const hashedPassword = await bcrypt.hash(password, 10);
-      await db.query(
-        'INSERT INTO users (email, password, role) VALUES ($1, $2, $3)',
-        [email, hashedPassword, role]
-      );
-    } else if (dbType === 'mongodb') {
-      const User = mongoose.model('User');
-      user = await User.findOne({ email });
-      if (user) {
-        return res.status(400).json({ msg: 'User already exists' });
-      }
-
-      user = new User({
-        email,
-        password: await bcrypt.hash(password, 10),
-        role
-      });
-      await user.save();
+    let user = await User.findOne({ email });
+    if (user) {
+      return res.status(400).json({ msg: 'User already exists' });
     }
 
-    const token = jwt.sign({ email, role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token, role });
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    user = new User({
+      email,
+      password: hashedPassword,
+      role,
+    });
+
+    await user.save();
+
+    const payload = { user: { id: user.id, role: user.role } };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+    res.json({ token, role: user.role });
   } catch (err) {
+    console.error('Registration error:', err);
     res.status(500).json({ msg: 'Server error' });
   }
 });
@@ -58,24 +43,22 @@ router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    const dbType = process.env.DB_TYPE;
-    let user;
-
-    if (dbType === 'postgres') {
-      const result = await db.query('SELECT * FROM users WHERE email = $1', [email]);
-      user = result.rows[0];
-    } else if (dbType === 'mongodb') {
-      const User = mongoose.model('User');
-      user = await User.findOne({ email });
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ msg: 'Invalid email or password' });
     }
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
-      return res.status(400).json({ msg: 'Invalid credentials' });
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ msg: 'Invalid email or password' });
     }
 
-    const token = jwt.sign({ email, role: user.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const payload = { user: { id: user.id, role: user.role } };
+    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
+
     res.json({ token, role: user.role });
   } catch (err) {
+    console.error('Login error:', err);
     res.status(500).json({ msg: 'Server error' });
   }
 });

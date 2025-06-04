@@ -10,16 +10,25 @@ const Register = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    console.log('Register button clicked with email:', email, 'role:', role, 'payload:', { email, password, role });
     try {
-      const res = await axios.post('http://localhost:5000/api/auth/register', { email, password, role });
+      console.log('Sending registration request to: https://df3d-102-89-33-228.ngrok-free.app/api/auth/register');
+      const res = await axios.post('https://df3d-102-89-33-228.ngrok-free.app/api/auth/register', { email, password, role });
+      console.log('Registration response:', res.data);
       localStorage.setItem('token', res.data.token);
-      if (res.data.role === 'Admin') {
+      const userRole = res.data.role;
+      console.log('Registration successful, role:', userRole);
+      if (userRole === 'Admin') {
         navigate('/admin');
-      } else if (res.data.role === 'FrontDesk') {
+      } else if (userRole === 'FrontDesk') {
         navigate('/frontdesk');
+      } else {
+        console.error('Unknown role received:', userRole);
+        navigate('/login');
       }
     } catch (err) {
-      alert('Registration failed. Email may already be in use or role is invalid.');
+      console.log('Registration error details:', err.response?.data, 'Status:', err.response?.status, 'Full error:', err);
+      alert(err.response?.data?.msg || 'Registration failed. Email may already be in use or role is invalid.');
     }
   };
 
@@ -50,6 +59,7 @@ const Register = () => {
           <select value={role} onChange={(e) => setRole(e.target.value)} required>
             <option value="FrontDesk">Front Desk</option>
             <option value="Admin">Admin</option>
+            <option value="Doctor">Doctor</option>
           </select>
         </div>
         <button type="submit" style={{ marginTop: '10px' }}>Register</button>
