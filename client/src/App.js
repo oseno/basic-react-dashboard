@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminDashboard from './pages/AdminDashboard';
 import FrontDeskDashboard from './pages/FrontDeskDashboard';
+import DoctorDashboard from './pages/DoctorDashboard';
 
 const ProtectedRoute = ({ role, children }) => {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ const ProtectedRoute = ({ role, children }) => {
 
     try {
       const decoded = jwtDecode(token);
-      const userRole = decoded.user?.role; // Access the nested role
+      const userRole = decoded.user?.role;
       console.log('Decoded role:', userRole, 'Expected role:', role);
       if (userRole !== role) {
         console.log('Role mismatch, redirecting to /login');
@@ -56,6 +57,14 @@ const App = () => {
           element={
             <ProtectedRoute role="FrontDesk">
               <FrontDeskDashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/doctor"
+          element={
+            <ProtectedRoute role="Doctor">
+              <DoctorDashboard />
             </ProtectedRoute>
           }
         />

@@ -11,7 +11,7 @@ const Login = () => {
     e.preventDefault();
     console.log('Login button clicked with email:', email);
     try {
-      const res = await axios.post('https://df3d-102-89-33-228.ngrok-free.app/api/auth/login', { email, password });
+      const res = await axios.post('https://6521-102-212-209-61.ngrok-free.app/api/auth/login', { email, password });
       localStorage.setItem('token', res.data.token);
       const role = res.data.role;
       console.log('Login successful, role:', role);
@@ -19,6 +19,8 @@ const Login = () => {
         navigate('/admin');
       } else if (role === 'FrontDesk') {
         navigate('/frontdesk');
+      }  else if (role === 'Doctor') {
+        navigate('/doctor');
       } else {
         console.error('Unknown role received:', role);
         navigate('/login');

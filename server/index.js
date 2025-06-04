@@ -10,7 +10,7 @@ initDB().catch(err => console.error('Failed to initialize database:', err));
 
 console.log('Setting up CORS middleware...');
 app.use(cors({
-  origin: 'https://0138-102-89-33-228.ngrok-free.app',
+  origin: ' https://064a-102-212-209-61.ngrok-free.app',
   credentials: true
 }));
 console.log('CORS middleware set up successfully.');

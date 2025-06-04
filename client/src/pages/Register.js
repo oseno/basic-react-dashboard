@@ -12,8 +12,8 @@ const Register = () => {
     e.preventDefault();
     console.log('Register button clicked with email:', email, 'role:', role, 'payload:', { email, password, role });
     try {
-      console.log('Sending registration request to: https://df3d-102-89-33-228.ngrok-free.app/api/auth/register');
-      const res = await axios.post('https://df3d-102-89-33-228.ngrok-free.app/api/auth/register', { email, password, role });
+      console.log('Sending registration request to: https://6521-102-212-209-61.ngrok-free.app/api/auth/register');
+      const res = await axios.post('https://6521-102-212-209-61.ngrok-free.app/api/auth/register', { email, password, role });
       console.log('Registration response:', res.data);
       localStorage.setItem('token', res.data.token);
       const userRole = res.data.role;
@@ -22,7 +22,10 @@ const Register = () => {
         navigate('/admin');
       } else if (userRole === 'FrontDesk') {
         navigate('/frontdesk');
-      } else {
+      } else if (userRole === 'Doctor') {
+        navigate('/doctor');
+      } 
+      else {
         console.error('Unknown role received:', userRole);
         navigate('/login');
       }
